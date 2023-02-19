@@ -7,7 +7,7 @@ void main() {
   pubPublisher.publish('1.2.0');
 
   // Publish a new version with a changelog message
-  pubPublisher.publish('1.3.0', changeLogMessage: 'Added a new feature');
+  pubPublisher.publish('1.3.0', message: 'Added a new feature');
 
   print('Package published!');
 }

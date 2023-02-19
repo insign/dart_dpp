@@ -10,22 +10,28 @@ void main() {
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('pub_publish_test');
+      print('tempDir: ${tempDir.path}');
+
       pubspecFile = await File('${tempDir.path}/pubspec.yaml').create();
       await pubspecFile.writeAsString('name: my_package\nversion: 1.0.0');
       changeLogFile = await File('${tempDir.path}/CHANGELOG.md').create();
     });
 
     tearDown(() async {
-      await tempDir.delete(recursive: true);
+      // await tempDir.delete(recursive: true);
     });
 
-    test('publish', () {
+    test('publish', () async {
       final publish = DartPubPublish(
-        pubspecFile: pubspecFile.path,
-        changeLogFile: changeLogFile.path,
-        git: false,
-      );
-      publish.publish('2.0.0', changeLogMessage: 'New feature');
+          pubspecFile: pubspecFile.path,
+          changeLogFile: changeLogFile.path,
+          workingDir: tempDir.path,
+          git: false,
+          analyze: false,
+          format: false,
+          fix: false,
+          tests: false);
+      await publish.publish('2.0.0', message: 'New feature');
       final updatedPubspec = pubspecFile.readAsStringSync();
       final expectedPubspec = 'name: my_package\nversion: 2.0.0';
       expect(updatedPubspec, expectedPubspec);
