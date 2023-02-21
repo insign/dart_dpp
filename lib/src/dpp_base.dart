@@ -85,7 +85,8 @@ class DartPubPublish {
   /// [message] is an optional message to be added to the changelog. If not
   /// specified, the changelog will not be updated.
   Future<void> publish(String newVersion, {String? message}) async {
-    if (message != null && _changelog) {
+    message ??= 'Update version number';
+    if (_changelog) {
       // Add the new version number and change log message to the head of the CHANGELOG.md file
       final currentContents = await _changeLogFile.readAsString();
       final newContents = '## v$newVersion\n- $message\n$currentContents';
@@ -125,8 +126,7 @@ class DartPubPublish {
     if (_git) {
       // Commit and push the changes and tag the new version
       await runCommand('git', ['add', '.']);
-      await runCommand(
-          'git', ['commit', '-m', message ?? 'Update version number']);
+      await runCommand('git', ['commit', '-m', message]);
       await runCommand('git', ['tag', 'v$newVersion']);
       await runCommand('git', ['push']);
       await runCommand('git', ['push', '--tags']);
