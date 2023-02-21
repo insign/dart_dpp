@@ -4,11 +4,13 @@ import 'package:path/path.dart' as path;
 
 import 'package:yaml2dart/yaml2dart.dart';
 
+// @TODO add publish command
+
 /// A utility class to publish a Dart package to pub.dev.
 class DartPubPublish {
-  final String? _pubspecFile;
-  final String? _changeLogFile;
-  final String? _workingDir;
+  final File _pubspecFile;
+  final File _changeLogFile;
+  final Directory _workingDir;
   final bool _git;
   final bool _pubspec;
   final bool _pubspec2dart;
@@ -42,9 +44,9 @@ class DartPubPublish {
   ///
   /// [analyze] is a flag indicating whether to run `dart analyze`. Defaults to true.
   DartPubPublish(
-      {pubspecFile,
-      changeLogFile,
-      workingDir,
+      {String? pubspecFile,
+      String? changeLogFile,
+      String? workingDir,
       git = true,
       pubspec = true,
       pubspec2dart = true,
@@ -53,9 +55,16 @@ class DartPubPublish {
       fix = true,
       format = true,
       analyze = true})
-      : _pubspecFile = pubspecFile ?? 'pubspec.yaml',
-        _changeLogFile = changeLogFile ?? 'CHANGELOG.md',
-        _workingDir = workingDir ?? Directory.current.path,
+      : _workingDir =
+            workingDir != null ? Directory(workingDir) : Directory.current,
+        _pubspecFile = pubspecFile != null
+            ? File(pubspecFile)
+            : File(path.join(
+                workingDir ?? Directory.current.path, 'pubspec.yaml')),
+        _changeLogFile = changeLogFile != null
+            ? File(changeLogFile)
+            : File(path.join(
+                workingDir ?? Directory.current.path, 'CHANGELOG.md')),
         _git = git,
         _pubspec = pubspec,
         _pubspec2dart = pubspec2dart,
@@ -63,7 +72,11 @@ class DartPubPublish {
         _tests = tests,
         _fix = fix,
         _format = format,
-        _analyze = analyze;
+        _analyze = analyze {
+    if (!_pubspecFile.existsSync()) {
+      throw Exception('${_pubspecFile.path} file does not exist.');
+    }
+  }
 
   /// Publishes the package to pub.dev.
   ///
@@ -74,18 +87,18 @@ class DartPubPublish {
   Future<void> publish(String newVersion, {String? message}) async {
     if (message != null && _changelog) {
       // Add the new version number and change log message to the head of the CHANGELOG.md file
-      final currentContents = await File(_changeLogFile!).readAsString();
+      final currentContents = await _changeLogFile.readAsString();
       final newContents = '## v$newVersion\n- $message\n$currentContents';
-      await File(_changeLogFile!).writeAsString(newContents);
+      await _changeLogFile.writeAsString(newContents);
     }
 
     if (_pubspec) {
       // Replace the version number in the pubspec.yaml file
-      final pubspec = await File(_pubspecFile!).readAsString();
+      final pubspec = await _pubspecFile.readAsString();
       final newPubspec = pubspec.replaceAll(
           RegExp(r'(\s?)version: .*$'), '\nversion: $newVersion');
 
-      await File(_pubspecFile!).writeAsString(newPubspec);
+      await _pubspecFile.writeAsString(newPubspec);
     }
 
     // Run Dart commands to fix, format, analyze, and test the package
@@ -104,8 +117,8 @@ class DartPubPublish {
     }
     if (_pubspec2dart) {
       // Create the pubspec.dart file
-      final dest = path.join(_workingDir!, 'pubspec.dart');
-      final y2d = Yaml2Dart(_pubspecFile!, dest);
+      final dest = path.join(_workingDir.path, 'pubspec.dart');
+      final y2d = Yaml2Dart(_pubspecFile.path, dest);
       await y2d.convert();
     }
 
@@ -129,7 +142,7 @@ class DartPubPublish {
   /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console.
   Future<void> runCommand(String command, List<String> args) async {
     final process =
-        await Process.start(command, args, workingDirectory: _workingDir);
+        await Process.start(command, args, workingDirectory: _workingDir.path);
     process.stdout.transform(utf8.decoder).listen((data) {
       // Output the data as soon as it is received
       print(data);
@@ -139,6 +152,9 @@ class DartPubPublish {
       print(data);
     });
     final exitCode = await process.exitCode;
-    if (exitCode != 0) print('Command exited with code $exitCode');
+    if (exitCode != 0) {
+      print('Command exited with code $exitCode');
+      exit(exitCode);
+    }
   }
 }

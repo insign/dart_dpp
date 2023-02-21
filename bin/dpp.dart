@@ -56,6 +56,8 @@ void main(List<String> arguments) {
 }
 
 Never showUsage(ArgParser parser) {
+  print('dpp - A better dart pub publish - v1.1.0');
+  print('Usage: dpp [options] <new version number>');
   print(parser.usage);
   exit(wrongUsage);
 }
