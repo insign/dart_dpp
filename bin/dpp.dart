@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:args/args.dart';
 import 'package:dpp/dpp.dart';
+import '../pubspec.dart' as pubspec;
 
 void main(List<String> arguments) {
   final parser = ArgParser()
@@ -27,6 +28,11 @@ void main(List<String> arguments) {
         defaultsTo: true, negatable: true, help: 'Run dart format.')
     ..addFlag('analyze',
         defaultsTo: true, negatable: true, help: 'Run dart analyze.')
+    ..addFlag('publish',
+        defaultsTo: true, negatable: true, help: 'Publish on pub.dev.')
+    ..addFlag('verbose',
+        defaultsTo: true, negatable: true, help: 'Show verbose output.')
+    ..addFlag('version', abbr: 'v', negatable: false, help: 'Show the version.')
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Show usage help.');
 
   ArgResults argResults;
@@ -35,6 +41,10 @@ void main(List<String> arguments) {
   } on FormatException catch (e) {
     print(e.message);
     showUsage(parser);
+  }
+
+  if (argResults['version']) {
+    showVersion(parser);
   }
 
   if (argResults['help'] || argResults.rest.isEmpty) {
@@ -50,9 +60,10 @@ void main(List<String> arguments) {
       tests: argResults['tests'],
       fix: argResults['fix'],
       format: argResults['format'],
-      analyze: argResults['analyze']);
-
-  dpp.publish(version, message: argResults['message']);
+      analyze: argResults['analyze'],
+      pubPublish: argResults['publish'],
+      verbose: argResults['verbose']);
+  dpp.run(version, message: argResults['message']);
 }
 
 Never showUsage(ArgParser parser) {
@@ -60,4 +71,13 @@ Never showUsage(ArgParser parser) {
   print('Usage: dpp [options] <new version number>');
   print(parser.usage);
   exit(wrongUsage);
+}
+
+Never showVersion(ArgParser parser) {
+  final name = pubspec.name;
+  final desc = pubspec.description.split('.').first;
+  final version = pubspec.version;
+
+  print('$name - $desc - v$version');
+  exit(success);
 }

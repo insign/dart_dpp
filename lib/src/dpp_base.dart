@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
 import 'package:dpp/exceptions/package_version_already_exists_exception.dart';
 import 'package:json2yaml/json2yaml.dart';
@@ -15,6 +16,7 @@ class DartPubPublish {
   final File _pubspecFile;
   final File _changeLogFile;
   final Directory _workingDir;
+  final bool _get;
   final bool _git;
   final bool _pubspec;
   final bool _pubspec2dart;
@@ -23,6 +25,7 @@ class DartPubPublish {
   final bool _fix;
   final bool _format;
   final bool _analyze;
+  final bool _publish;
   final bool _verbose;
 
   /// Creates a new instance of [DartPubPublish].
@@ -52,6 +55,7 @@ class DartPubPublish {
       {String? pubspecFile,
       String? changeLogFile,
       String? workingDir,
+      pubGet = true,
       git = true,
       pubspec = true,
       pubspec2dart = true,
@@ -60,6 +64,7 @@ class DartPubPublish {
       fix = true,
       format = true,
       analyze = true,
+      pubPublish = true,
       verbose = true})
       : _workingDir =
             workingDir != null ? Directory(workingDir) : Directory.current,
@@ -71,6 +76,7 @@ class DartPubPublish {
             ? File(changeLogFile)
             : File(path.join(
                 workingDir ?? Directory.current.path, 'CHANGELOG.md')),
+        _get = pubGet,
         _git = git,
         _pubspec = pubspec,
         _pubspec2dart = pubspec2dart,
@@ -79,6 +85,7 @@ class DartPubPublish {
         _fix = fix,
         _format = format,
         _analyze = analyze,
+        _publish = pubPublish,
         _verbose = verbose {
     if (!_pubspecFile.existsSync()) {
       throw PubspecNotFound(_pubspecFile.path);
@@ -91,17 +98,21 @@ class DartPubPublish {
   ///
   /// [message] is an optional message to be added to the changelog. If not
   /// specified, the changelog will not be updated.
-  Future<void> publish(String newVersion, {String? message}) async {
+  Future<void> run(String newVersion,
+      {String? message = 'Update version number'}) async {
+    String? oldPubspecContents;
+    String? oldChangeLogContents;
+
     log('Publishing package to pub.dev...');
-    message ??= 'Update version number';
     log('New version: $newVersion');
     log('Message: $message');
+    log('Working directory: ${_workingDir.path}');
 
     if (_pubspec) {
       // Replace the version number in the pubspec.yaml file
       log('Updating version in pubspec.yaml...');
-      final pubspecContents = await _pubspecFile.readAsString();
-      final yaml = loadYaml(pubspecContents);
+      oldPubspecContents = await _pubspecFile.readAsString();
+      final yaml = loadYaml(oldPubspecContents);
       final oldVersion = yaml['version'] as String;
       if (newVersion == oldVersion) {
         throw PackageVersionAlreadyExistsException(newVersion);
@@ -114,46 +125,76 @@ class DartPubPublish {
       _pubspecFile.writeAsStringSync(yamlString);
       log('Updated version in pubspec.yaml from $oldVersion to $newVersion');
     }
+    try {
+      if (_pubspec2dart) {
+        // Create the pubspec.dart file
+        log('Creating pubspec.dart...');
+        final dest = path.join(_workingDir.path, 'pubspec.dart');
+        final y2d = Yaml2Dart(_pubspecFile.path, dest);
+        await y2d.convert();
+      }
 
-    if (_pubspec2dart) {
-      // Create the pubspec.dart file
-      log('Creating pubspec.dart...');
-      final dest = path.join(_workingDir.path, 'pubspec.dart');
-      final y2d = Yaml2Dart(_pubspecFile.path, dest);
-      await y2d.convert();
-    }
+      if (_get) {
+        // Run pub get
+        log('Running dart pub get...');
+        await runCommand('dart', ['pub', 'get']);
+      }
 
-    // Run Dart commands to fix, format, analyze, and test the package
-    if (_fix) {
-      log('Running dart fix --apply...');
-      await runCommand('dart', ['fix', '--apply']);
-    }
-    if (_format) {
-      log('Running dart format...');
-      await runCommand('dart', ['format', '.']);
-    }
-    if (_analyze) {
-      log('Running dart analyze...');
-      await runCommand('dart', ['analyze']);
-    }
-    if (_tests) {
-      log('Running dart tests...');
-      await runCommand('dart', ['test']);
-    }
+      // Run Dart commands to fix, format, analyze, and test the package
+      if (_fix) {
+        log('Running dart fix --apply...');
+        await runCommand('dart', ['fix', '--apply']);
+      }
+      if (_format) {
+        log('Running dart format...');
+        await runCommand('dart', ['format', '.']);
+      }
+      if (_analyze) {
+        log('Running dart analyze...');
+        await runCommand('dart', ['analyze']);
+      }
+      if (_tests) {
+        log('Running dart tests...');
+        await runCommand('dart', ['test']);
+      }
 
-    if (_changelog) {
-      // Add the new version number and change log message to the head of the CHANGELOG.md file
-      log('Updating CHANGELOG.md...');
-      final currentContents = await _changeLogFile.readAsString();
-      final newContents = '## v$newVersion\n- $message\n$currentContents';
-      await _changeLogFile.writeAsString(newContents);
-    }
+      if (_changelog) {
+        // Add the new version number and change log message to the head of the CHANGELOG.md file
+        log('Updating CHANGELOG.md...');
+        oldChangeLogContents = await _changeLogFile.readAsString();
+        final newContents =
+            '## v$newVersion\n- $message\n$oldChangeLogContents';
+        await _changeLogFile.writeAsString(newContents);
+      }
 
+      if (_publish) {
+        // Publish the package to pub.dev
+        log('Publishing package to pub.dev...');
+        await runCommand(
+            'dart', ['pub', 'publish', '--force', '-C', _workingDir.path]);
+      }
+    } on Exception catch (e) {
+      // Rollback the changes to the pubspec.yaml file
+      log(e.toString(), error: true);
+
+      if (_pubspec && oldPubspecContents != null) {
+        log('Rolling back changes to pubspec.yaml...');
+        _pubspecFile.writeAsStringSync(oldPubspecContents);
+      }
+
+      // Rollback the changes to the CHANGELOG.md file
+      if (_changelog && oldChangeLogContents != null) {
+        log('Rolling back changes to CHANGELOG.md...');
+        _changeLogFile.writeAsStringSync(oldChangeLogContents);
+      }
+
+      exit(generalError);
+    }
     if (_git) {
       // Commit and push the changes and tag the new version
       log('Committing and pushing changes...');
       await runCommand('git', ['add', '.']);
-      await runCommand('git', ['commit', '-m', message]);
+      await runCommand('git', ['commit', '-m', message!]);
       log('Tagging new version...');
       await runCommand('git', ['tag', 'v$newVersion']);
       await runCommand('git', ['push']);
@@ -186,9 +227,13 @@ class DartPubPublish {
     }
   }
 
-  void log(String message) {
+  void log(String message, {bool error = false}) {
     if (_verbose) {
-      print('[LOG] $message');
+      if (error) {
+        print('[ERROR] $message');
+      } else {
+        print('[LOG] $message');
+      }
     }
   }
 }

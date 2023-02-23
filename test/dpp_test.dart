@@ -21,7 +21,7 @@ void main() {
       // await tempDir.delete(recursive: true);
     });
 
-    test('publish', () async {
+    test('change changelog', () async {
       final publish = DartPubPublish(
           pubspecFile: pubspecFile.path,
           changeLogFile: changeLogFile.path,
@@ -30,8 +30,12 @@ void main() {
           analyze: false,
           format: false,
           fix: false,
-          tests: false);
-      await publish.publish('2.0.0', message: 'New feature');
+          tests: false,
+          pubGet: false,
+          pubspec: true,
+          pubspec2dart: false,
+          pubPublish: false);
+      await publish.run('2.0.0', message: 'New feature');
       final updatedPubspec = pubspecFile.readAsStringSync();
       final expectedPubspec = 'name: my_package\nversion: 2.0.0\n';
       expect(updatedPubspec, expectedPubspec);
