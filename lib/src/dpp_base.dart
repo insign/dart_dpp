@@ -170,8 +170,7 @@ class DartPubPublish {
       if (_publish) {
         // Publish the package to pub.dev
         log('Publishing package to pub.dev...');
-        await runCommand(
-            'dart', ['pub', 'publish', '--force', '-C', _workingDir.path]);
+        await runCommand('dart', ['pub', 'publish', '--force']);
       }
     } on Exception catch (e) {
       // Rollback the changes to the pubspec.yaml file

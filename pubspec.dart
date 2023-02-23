@@ -1,7 +1,7 @@
 const name = 'dpp';
 const description =
     'A better dart pub publish. Before publish, runs tests, fixes, lint, updates CHANGELOG, pubspec file and git commands.';
-const version = '1.1.16';
+const version = '1.1.17';
 const repository = 'https://github.com/insign/dart_dpp';
 const environment = '{sdk: >=2.18.6 <3.0.0}';
 const devDependencies = '{lints: ^2.0.0, test: ^1.21.0}';
