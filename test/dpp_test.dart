@@ -33,7 +33,7 @@ void main() {
           tests: false);
       await publish.publish('2.0.0', message: 'New feature');
       final updatedPubspec = pubspecFile.readAsStringSync();
-      final expectedPubspec = 'name: my_package\nversion: 2.0.0';
+      final expectedPubspec = 'name: my_package\nversion: 2.0.0\n';
       expect(updatedPubspec, expectedPubspec);
 
       final updatedChangeLog = changeLogFile.readAsStringSync();
