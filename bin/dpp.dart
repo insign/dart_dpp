@@ -5,10 +5,8 @@ import 'package:dpp/src/dpp.dart';
 import 'package:dpp/pubspec.dart' as pubspec;
 
 void main(List<String> args) {
-  if (args.isNotEmpty) {
-    if (args.first == '-v' || args.first == '--version') {
-      showVersion(args);
-    }
+  if (args.isNotEmpty && (args.first == '-v' || args.first == '--version')) {
+    showVersion(args);
   }
 
   final parser = ArgParser()
@@ -97,7 +95,7 @@ Never showVersion(args) {
   } else {
     final name = pubspec.name;
     final desc = pubspec.description.split('.').first;
-    print('$name - v$version - $desc');
+    print('$name v$version - $desc');
   }
 
   exit(success);

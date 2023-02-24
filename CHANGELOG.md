@@ -1,3 +1,5 @@
+## v2.0.5
+- better version output
 ## v2.0.4
 - better version output
 ## v2.0.3
