@@ -1,3 +1,5 @@
+## v2.0.6
+- added support for any branch but needs main or master by defualt
 ## v2.0.5
 - better version output
 ## v2.0.4

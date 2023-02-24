@@ -31,6 +31,12 @@ class DartPubPublish {
   /// A flag indicating whether to run git commands to commit, tag, and push changes.
   final bool _git;
 
+  /// A flag indicating whether to run git commands on any branch.
+  final bool _anyBranch;
+
+  /// A flag indicating whether to only run git commands on the specified branch.
+  final String? _branch;
+
   /// A flag indicating whether to update the version number in the pubspec file.
   final bool _pubspec;
 
@@ -92,6 +98,8 @@ class DartPubPublish {
       String? workingDir,
       pubGet = true,
       git = true,
+      anyBranch = false,
+      branch,
       pubspec = true,
       pubspec2dart = true,
       changelog = true,
@@ -113,6 +121,8 @@ class DartPubPublish {
                 workingDir ?? Directory.current.path, 'CHANGELOG.md')),
         _get = pubGet,
         _git = git,
+        _anyBranch = anyBranch,
+        _branch = branch,
         _pubspec = pubspec,
         _pubspec2dart = pubspec2dart,
         _changelog = changelog,
@@ -267,14 +277,19 @@ class DartPubPublish {
       exit(generalError);
     }
     if (_git) {
-      // Commit and push the changes and tag the new version
-      log('Committing and pushing changes...');
-      await runCommand('git', ['add', '.']);
-      await runCommand('git', ['commit', '-m', message!]);
-      log('Tagging new version...');
-      await runCommand('git', ['tag', 'v$newVersion']);
-      await runCommand('git', ['push']);
-      await runCommand('git', ['push', '--tags']);
+      final onBranch = await isBranch(_branch);
+      if (!_anyBranch && !onBranch) {
+        log('Not on $_branch branch, skipping git commands', error: true);
+      } else {
+        // Commit and push the changes and tag the new version
+        log('Committing and pushing changes...');
+        await runCommand('git', ['add', '.']);
+        await runCommand('git', ['commit', '-m', message!]);
+        log('Tagging new version...');
+        await runCommand('git', ['tag', 'v$newVersion']);
+        await runCommand('git', ['push']);
+        await runCommand('git', ['push', '--tags']);
+      }
     }
   }
 
@@ -319,5 +334,18 @@ class DartPubPublish {
         print('[LOG] $message');
       }
     }
+  }
+
+  Future<bool> isBranch(String? branch) async {
+    final ProcessResult result = await Process.run(
+        'git', ['branch', '--show-current'],
+        workingDirectory: _workingDir.path);
+    final output = utf8.decode(result.stdout);
+    final currentBranchName = output.trim();
+    if (branch != null) {
+      return currentBranchName == branch;
+    }
+
+    return currentBranchName == 'main' || currentBranchName == 'master';
   }
 }

@@ -15,6 +15,13 @@ void main(List<String> args) {
         defaultsTo: true,
         negatable: true,
         help: 'Run git commands: add, commit, tag and push.')
+    ..addFlag('any-branch',
+        defaultsTo: false,
+        negatable: false,
+        help: 'Allow to run on any branch.')
+    ..addOption('branch',
+        help: 'The branch to run on. Default is main or master.',
+        valueHelp: 'branch_name')
     ..addFlag('pubspec',
         defaultsTo: true,
         negatable: true,
@@ -22,7 +29,7 @@ void main(List<String> args) {
     ..addFlag('pubspec2dart',
         defaultsTo: true,
         negatable: true,
-        help: 'Create the pubspec.dart file on the root of the project.')
+        help: 'Create the pubspec.dart file on the lib/ of the project.')
     ..addFlag('changelog',
         defaultsTo: true, negatable: true, help: 'Update the changelog.')
     ..addFlag('tests',
@@ -64,6 +71,8 @@ void main(List<String> args) {
 
   final dpp = DartPubPublish(
       git: argResults['git'],
+      anyBranch: argResults['any-branch'],
+      branch: argResults['branch'].isEmpty ? null : argResults['branch'],
       pubspec: argResults['pubspec'],
       pubspec2dart: argResults['pubspec2dart'],
       changelog: argResults['changelog'],
