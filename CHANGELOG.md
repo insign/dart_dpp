@@ -1,3 +1,5 @@
+## v1.3.1
+- README.md adjustment
 ## v1.3.0
 - Added support for patch, minor and major besides the number version.
 ## v1.2.1

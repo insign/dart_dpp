@@ -9,6 +9,8 @@ dart pub global activate dpp
 ```
 
 > If you receive a "Warning" just follow the instructions and reopen the console. If you need more help visit [Running a script from your PATH](https://dart.dev/tools/pub/cmd/pub-global#running-a-script-from-your-path).
+>
+> If you don't want to change your precious PATH, [go horse](https://gohorseprocess.com.br/extreme-go-horse-xgh/), just run `dart pub global run dpp`
 
 ## Simple CLI usage
 
