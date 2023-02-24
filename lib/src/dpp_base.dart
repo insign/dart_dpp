@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:all_exit_codes/all_exit_codes.dart';
+import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
 import 'package:dpp/exceptions/package_version_already_exists_exception.dart';
 import 'package:json2yaml/json2yaml.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
+
+import 'package:pub_semver/pub_semver.dart';
 
 import 'package:yaml2dart/yaml2dart.dart';
 
@@ -126,8 +129,11 @@ class DartPubPublish {
 
   /// Runs a series of commands to publish a Dart package to pub.dev.
   ///
-  /// The new version number is specified by [newVersion]. An optional message can be provided
-  /// for the change log by setting the [message] parameter.
+  /// [version] is mandatory and must be a valid semantic version number
+  /// but [version] can patch, minor or major too,
+  /// which is automatically detected and incremented.
+  /// An optional message can be provided for the change log (and git commit)
+  /// by setting the [message] parameter.
   ///
   /// If any of the commands fail, the changes made to the pubspec.yaml and CHANGELOG.md files
   /// will be rolled back.
@@ -145,12 +151,37 @@ class DartPubPublish {
   /// - [_git] Whether to commit and push the changes and tag the new version. Default is true.
   ///
   /// Throws a [PackageVersionAlreadyExistsException] if the package version already exists on pub.dev.
-  Future<void> run(String newVersion,
+  Future<void> run(String version,
       {String? message = 'Update version number'}) async {
-    String? oldPubspecContents;
     String? oldChangeLogContents;
+    String oldPubspecContents = await _pubspecFile.readAsString();
+    final yaml = loadYaml(oldPubspecContents);
+    final oldVersion = Version.parse(yaml['version']);
+    Version newVersion;
+
+    try {
+      newVersion = Version.parse(version);
+    } on FormatException {
+      if (version == 'patch') {
+        newVersion = oldVersion.nextPatch;
+      } else if (version == 'minor') {
+        newVersion = oldVersion.nextMinor;
+      } else if (version == 'major') {
+        newVersion = oldVersion.nextMajor;
+      } else {
+        throw FormatException('Invalid version: $version');
+      }
+    }
+
+    if (newVersion == oldVersion) {
+      throw PackageVersionAlreadyExistsException(newVersion);
+    }
+    if (newVersion < oldVersion) {
+      throw PackageVersionLowerException(newVersion, oldVersion);
+    }
 
     log('Publishing package to pub.dev...');
+    log('Old version: $oldVersion');
     log('New version: $newVersion');
     log('Message: $message');
     log('Working directory: ${_workingDir.path}');
@@ -158,13 +189,7 @@ class DartPubPublish {
     if (_pubspec) {
       // Replace the version number in the pubspec.yaml file
       log('Updating version in pubspec.yaml...');
-      oldPubspecContents = await _pubspecFile.readAsString();
-      final yaml = loadYaml(oldPubspecContents);
-      final oldVersion = yaml['version'] as String;
-      if (newVersion == oldVersion) {
-        throw PackageVersionAlreadyExistsException(newVersion);
-      }
-      final updatedYaml = {...yaml, 'version': newVersion};
+      final updatedYaml = {...yaml, 'version': newVersion.toString()};
       final jsonString = json.encode(updatedYaml);
       final jsonMap = json.decode(jsonString);
       final yamlString = json2yaml(jsonMap, yamlStyle: YamlStyle.pubspecYaml);
@@ -223,7 +248,7 @@ class DartPubPublish {
       // Rollback the changes to the pubspec.yaml file
       log(e.toString(), error: true);
 
-      if (_pubspec && oldPubspecContents != null) {
+      if (_pubspec) {
         log('Rolling back changes to pubspec.yaml...');
         _pubspecFile.writeAsStringSync(oldPubspecContents);
       }

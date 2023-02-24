@@ -13,7 +13,21 @@ dart pub global activate dpp
 ## Simple CLI usage
 
 ```bash
-dpp <version> [optional commit/changelog message]
+dpp <1.2.3|patch|minor|major> [optional commit/changelog message]
+```
+
+Examples:
+
+```bash
+dpp 1.0.1 Typo fix
+```
+
+```bash
+dpp minor New great feature # version will be 1.1.0
+```
+
+```bash
+dpp major Rewritten code from Rust to Dart # 2.0.0
 ```
 
 Simple run `dpp` to see all flags available.
@@ -31,10 +45,10 @@ void main() {
   final pubPublisher = DartPubPublish(git: false);
 
   // Publish a new version with default message
-  pubPublisher.run('1.2.0'); // default message: 'Update version number'
+  pubPublisher.run('1.2.1'); // default message: 'Update version number'
 
   // Publish a new version with a changelog message
-  pubPublisher.run('1.3.0', message: 'Added a new feature');
+  pubPublisher.run('minor', message: 'Added a new feature');
 
   print('Package published!');
 }

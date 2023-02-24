@@ -53,7 +53,7 @@ void main(List<String> arguments) {
   final String version = argResults.rest.first;
 
   final String? message =
-      argResults.rest[1].isEmpty ? null : argResults.rest.skip(1).join(' ');
+      argResults.rest.length < 2 ? null : argResults.rest.skip(1).join(' ');
 
   final dpp = DartPubPublish(
       git: argResults['git'],
