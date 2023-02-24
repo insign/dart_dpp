@@ -1,3 +1,5 @@
+## v2.0.2
+- applying new pubspec.dart location
 ## v2.0.1
 - using updates inside itself
 ## v2.0.0
