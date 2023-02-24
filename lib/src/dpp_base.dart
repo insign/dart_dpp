@@ -340,8 +340,9 @@ class DartPubPublish {
     final ProcessResult result = await Process.run(
         'git', ['branch', '--show-current'],
         workingDirectory: _workingDir.path);
-    final output = utf8.decode(result.stdout);
-    final currentBranchName = output.trim();
+
+    final currentBranchName = result.stdout.trim();
+
     if (branch != null) {
       return currentBranchName == branch;
     }

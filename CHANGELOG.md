@@ -1,3 +1,9 @@
+## v2.0.11
+- hotfix
+## v2.0.8
+- hotfix
+## v2.0.7
+- hotfix
 ## v2.0.6
 - added support for any branch but needs main or master by defualt
 ## v2.0.5

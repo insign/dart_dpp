@@ -72,7 +72,7 @@ void main(List<String> args) {
   final dpp = DartPubPublish(
       git: argResults['git'],
       anyBranch: argResults['any-branch'],
-      branch: argResults['branch'].isEmpty ? null : argResults['branch'],
+      branch: argResults['branch'],
       pubspec: argResults['pubspec'],
       pubspec2dart: argResults['pubspec2dart'],
       changelog: argResults['changelog'],
