@@ -18,10 +18,10 @@ void main() {
     });
 
     tearDown(() async {
-      // await tempDir.delete(recursive: true);
+      await tempDir.delete(recursive: true);
     });
 
-    test('change changelog', () async {
+    test('using version number - change changelog and pubspec', () async {
       final publish = DartPubPublish(
           pubspecFile: pubspecFile.path,
           changeLogFile: changeLogFile.path,
@@ -36,6 +36,30 @@ void main() {
           pubspec2dart: false,
           pubPublish: false);
       await publish.run('2.0.0', message: 'New feature');
+      final updatedPubspec = pubspecFile.readAsStringSync();
+      final expectedPubspec = 'name: my_package\nversion: 2.0.0\n';
+      expect(updatedPubspec, expectedPubspec);
+
+      final updatedChangeLog = changeLogFile.readAsStringSync();
+      final expectedChangeLog = '## v2.0.0\n- New feature\n';
+      expect(updatedChangeLog, expectedChangeLog);
+    });
+
+    test('using alias - change changelog and pubspec', () async {
+      final publish = DartPubPublish(
+          pubspecFile: pubspecFile.path,
+          changeLogFile: changeLogFile.path,
+          workingDir: tempDir.path,
+          git: false,
+          analyze: false,
+          format: false,
+          fix: false,
+          tests: false,
+          pubGet: false,
+          pubspec: true,
+          pubspec2dart: false,
+          pubPublish: false);
+      await publish.run('major', message: 'New feature');
       final updatedPubspec = pubspecFile.readAsStringSync();
       final expectedPubspec = 'name: my_package\nversion: 2.0.0\n';
       expect(updatedPubspec, expectedPubspec);
