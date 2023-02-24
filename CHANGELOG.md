@@ -1,3 +1,5 @@
+## v1.3.2
+- preparing to use dpp
 ## v1.3.1
 - README.md adjustment
 ## v1.3.0
