@@ -9,8 +9,6 @@ void main(List<String> arguments) {
     ..addCommand('') // No command name means this is the default command.
     ..addFlag('git',
         defaultsTo: true, negatable: true, help: 'Run or not git commands.')
-    ..addOption('message',
-        abbr: 'm', help: 'Add a message to the changelog/git commit.')
     ..addFlag('pubspec',
         defaultsTo: true,
         negatable: true,
@@ -50,7 +48,10 @@ void main(List<String> arguments) {
   if (argResults['help'] || argResults.rest.isEmpty) {
     showUsage(parser);
   }
-  final version = argResults.rest.first;
+  final String version = argResults.rest.first;
+
+  final String? message =
+      argResults.rest[1].isEmpty ? null : argResults.rest.skip(1).join(' ');
 
   final dpp = DartPubPublish(
       git: argResults['git'],
@@ -63,12 +64,12 @@ void main(List<String> arguments) {
       analyze: argResults['analyze'],
       pubPublish: argResults['publish'],
       verbose: argResults['verbose']);
-  dpp.run(version, message: argResults['message']);
+  dpp.run(version, message: message);
 }
 
 Never showUsage(ArgParser parser) {
   print('dpp - A better dart pub publish - v1.1.0');
-  print('Usage: dpp [options] <new version number>');
+  print('Usage: dpp [options] <new version number> [message]');
   print(parser.usage);
   exit(wrongUsage);
 }

@@ -13,19 +13,46 @@ import 'package:yaml2dart/yaml2dart.dart';
 
 /// A utility class to publish a Dart package to pub.dev.
 class DartPubPublish {
+  /// The file path to the pubspec file.
   final File _pubspecFile;
+
+  /// The file path to the changelog file.
   final File _changeLogFile;
+
+  /// The working directory to run the commands in.
   final Directory _workingDir;
+
+  /// A flag indicating whether to run the `dart pub get` command.
   final bool _get;
+
+  /// A flag indicating whether to run git commands to commit, tag, and push changes.
   final bool _git;
+
+  /// A flag indicating whether to update the version number in the pubspec file.
   final bool _pubspec;
+
+  /// A flag indicating whether to generate the `pubspec.dart` file.
   final bool _pubspec2dart;
+
+  /// A flag indicating whether to update the changelog file.
   final bool _changelog;
+
+  /// A flag indicating whether to run tests.
   final bool _tests;
+
+  /// A flag indicating whether to run `dart fix --apply`.
   final bool _fix;
+
+  /// A flag indicating whether to run `dart format .`.
   final bool _format;
+
+  /// A flag indicating whether to run `dart analyze`.
   final bool _analyze;
+
+  /// A flag indicating whether to publish the package to pub.dev.
   final bool _publish;
+
+  /// A flag indicating whether to print log messages to the console.
   final bool _verbose;
 
   /// Creates a new instance of [DartPubPublish].
@@ -51,6 +78,11 @@ class DartPubPublish {
   /// [format] is a flag indicating whether to run `dart format .`. Defaults to true.
   ///
   /// [analyze] is a flag indicating whether to run `dart analyze`. Defaults to true.
+  ///
+  /// [pubPublish] is a flag indicating whether to publish the package to pub.dev. Defaults to true.
+  ///
+  /// [verbose] is a flag indicating whether to print log messages to the console. Defaults to true.
+  /// Throws a [PubspecNotFound] exception if the pubspec file does not exist.
   DartPubPublish(
       {String? pubspecFile,
       String? changeLogFile,
@@ -92,12 +124,27 @@ class DartPubPublish {
     }
   }
 
-  /// Publishes the package to pub.dev.
+  /// Runs a series of commands to publish a Dart package to pub.dev.
   ///
-  /// [newVersion] is the new version number for the package.
+  /// The new version number is specified by [newVersion]. An optional message can be provided
+  /// for the change log by setting the [message] parameter.
   ///
-  /// [message] is an optional message to be added to the changelog. If not
-  /// specified, the changelog will not be updated.
+  /// If any of the commands fail, the changes made to the pubspec.yaml and CHANGELOG.md files
+  /// will be rolled back.
+  ///
+  /// The following optional boolean parameters control which commands are run:
+  /// - [_pubspec] Whether to update the version number in the pubspec.yaml file. Default is true.
+  /// - [_pubspec2dart] Whether to create the pubspec.dart file. Default is false.
+  /// - [_get] Whether to run dart pub get. Default is true.
+  /// - [_fix] Whether to run dart fix --apply. Default is true.
+  /// - [_format] Whether to run dart format .. Default is true.
+  /// - [_analyze] Whether to run dart analyze. Default is true.
+  /// - [_tests] Whether to run dart test. Default is true.
+  /// - [_changelog] Whether to update the CHANGELOG.md file. Default is true.
+  /// - [_publish] Whether to publish the package to pub.dev. Default is true.
+  /// - [_git] Whether to commit and push the changes and tag the new version. Default is true.
+  ///
+  /// Throws a [PackageVersionAlreadyExistsException] if the package version already exists on pub.dev.
   Future<void> run(String newVersion,
       {String? message = 'Update version number'}) async {
     String? oldPubspecContents;
@@ -207,7 +254,8 @@ class DartPubPublish {
   ///
   /// The standard output and standard error of the process are printed to the console as soon as they are received.
   ///
-  /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console.
+  /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console and
+  /// the program is terminated with that exit code.
   Future<void> runCommand(String command, List<String> args) async {
     final process =
         await Process.start(command, args, workingDirectory: _workingDir.path);
@@ -226,6 +274,13 @@ class DartPubPublish {
     }
   }
 
+  /// Logs a message to the console, with the option to mark it as an error.
+  ///
+  /// If [_verbose] is true, the message will be printed to the console. If
+  /// error is true, the message will be prefixed with [ERROR]. Otherwise,
+  /// it will be prefixed with [LOG].
+  ///
+  /// If [_verbose] is false, this method does nothing.
   void log(String message, {bool error = false}) {
     if (_verbose) {
       if (error) {

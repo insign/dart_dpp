@@ -1,3 +1,5 @@
+## v1.1.18
+- Updating docs and small fixes
 ## v1.1.17
 - Testing things...
 ## v1.1.16
