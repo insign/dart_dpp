@@ -18,7 +18,7 @@ dpp <version> [optional commit/changelog message]
 
 Simple run `dpp` to see all flags available.
 
->ProTip: create an alias "pp" with your default flags. If my standard do not fits for you. E.g. put the following in you bashrc/zshrc: `alias pp="dpp --no-git --no-tests`
+>ProTip: create an alias "pp" with your default flags. If my standard do not fits for you. E.g. put the following in you bashrc/zshrc: `alias pp="dpp --no-git --no-tests"`
 
 ## Using internaly in only one project
 

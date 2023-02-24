@@ -1,3 +1,5 @@
+## v1.2.1
+- README.md fix
 ## v1.2.0
 - Update README.md with with updated instructions.
 ## v1.1.19
