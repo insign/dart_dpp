@@ -4,7 +4,13 @@ import 'package:args/args.dart';
 import 'package:dpp/src/dpp.dart';
 import 'package:dpp/pubspec.dart' as pubspec;
 
-void main(List<String> arguments) {
+void main(List<String> args) {
+  if (args.isNotEmpty) {
+    if (args.first == '-v' || args.first == '--version') {
+      showVersion(args);
+    }
+  }
+
   final parser = ArgParser()
     ..addCommand('') // No command name means this is the default command.
     ..addFlag('git',
@@ -32,12 +38,15 @@ void main(List<String> arguments) {
         defaultsTo: true, negatable: true, help: 'Publish on pub.dev.')
     ..addFlag('verbose',
         defaultsTo: true, negatable: true, help: 'Show verbose output.')
-    ..addFlag('version', abbr: 'v', negatable: false, help: 'Show the version.')
+    ..addFlag('version',
+        abbr: 'v',
+        negatable: false,
+        help: 'Show the version of ${pubspec.name}.')
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Show usage help.');
 
   ArgResults argResults;
   try {
-    argResults = parser.parse(arguments);
+    argResults = parser.parse(args);
   } on FormatException catch (e) {
     print(e.message);
     showUsage(parser);
@@ -80,11 +89,16 @@ Never showUsage(ArgParser parser) {
   exit(wrongUsage);
 }
 
-Never showVersion(ArgParser parser) {
-  final name = pubspec.name;
-  final desc = pubspec.description.split('.').first;
+Never showVersion(args) {
   final version = pubspec.version;
 
-  print('$name - $desc - v$version');
+  if (args.first == '-v') {
+    print(version);
+  } else {
+    final name = pubspec.name;
+    final desc = pubspec.description.split('.').first;
+    print('$name - v$version - $desc');
+  }
+
   exit(success);
 }
