@@ -1,3 +1,5 @@
+## v1.2.0
+- Update README.md with with updated instructions.
 ## v1.1.19
 - Update README.md and added dpp as system aware executable
 ## v1.1.18
