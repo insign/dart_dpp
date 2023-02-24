@@ -140,7 +140,7 @@ class DartPubPublish {
   ///
   /// The following optional boolean parameters control which commands are run:
   /// - [_pubspec] Whether to update the version number in the pubspec.yaml file. Default is true.
-  /// - [_pubspec2dart] Whether to create the pubspec.dart file. Default is false.
+  /// - [_pubspec2dart] Whether to create the pubspec.dart file in lib directory. Default is true.
   /// - [_get] Whether to run dart pub get. Default is true.
   /// - [_fix] Whether to run dart fix --apply. Default is true.
   /// - [_format] Whether to run dart format .. Default is true.
@@ -200,10 +200,15 @@ class DartPubPublish {
     try {
       if (_pubspec2dart) {
         // Create the pubspec.dart file
-        log('Creating pubspec.dart...');
-        final dest = path.join(_workingDir.path, 'pubspec.dart');
-        final y2d = Yaml2Dart(_pubspecFile.path, dest);
-        await y2d.convert();
+        log('Creating pubspec.dart... inside lib folder');
+        final libDir = Directory(path.join(_workingDir.path, 'lib'));
+        if (!libDir.existsSync()) {
+          log('No lib folder found, ignoring pubspec2dart option', error: true);
+        } else {
+          final dest = path.join(_workingDir.path, 'lib', 'pubspec.dart');
+          final y2d = Yaml2Dart(_pubspecFile.path, dest);
+          await y2d.convert();
+        }
       }
 
       if (_get) {
