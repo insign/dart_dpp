@@ -1,3 +1,5 @@
+## v2.0.1
+- using updates inside itself
 ## v2.0.0
 - new pubspec2dart directory. Now inside lib/ otherwise ignore flag.
 ## v1.3.2

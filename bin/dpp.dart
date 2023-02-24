@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:args/args.dart';
-import 'package:dpp/dpp.dart';
+import 'package:dpp/src/dpp.dart';
 import '../pubspec.dart' as pubspec;
 
 void main(List<String> arguments) {

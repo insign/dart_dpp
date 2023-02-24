@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:dpp/dpp.dart';
+import 'package:dpp/src/dpp.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,4 +1,4 @@
-import 'package:dpp/dpp.dart';
+import 'package:dpp/src/dpp.dart';
 
 void main() {
   final pubPublisher = DartPubPublish(git: false);
