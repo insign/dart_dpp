@@ -1,6 +1,6 @@
 name: dpp
 description: 'A better dart pub publish. Before publish, runs tests, fixes, lint, updates CHANGELOG, pubspec file and git commands.'
-version: 2.0.11
+version: 2.0.12
 repository: https://github.com/insign/dart_dpp
 executables:
   dpp:
