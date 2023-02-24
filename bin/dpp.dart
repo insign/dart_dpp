@@ -8,7 +8,9 @@ void main(List<String> arguments) {
   final parser = ArgParser()
     ..addCommand('') // No command name means this is the default command.
     ..addFlag('git',
-        defaultsTo: true, negatable: true, help: 'Run or not git commands.')
+        defaultsTo: true,
+        negatable: true,
+        help: 'Run git commands: add, commit, tag and push.')
     ..addFlag('pubspec',
         defaultsTo: true,
         negatable: true,
@@ -16,7 +18,7 @@ void main(List<String> arguments) {
     ..addFlag('pubspec2dart',
         defaultsTo: true,
         negatable: true,
-        help: 'Create the pubspec.dart file.')
+        help: 'Create the pubspec.dart file on the root of the project.')
     ..addFlag('changelog',
         defaultsTo: true, negatable: true, help: 'Update the changelog.')
     ..addFlag('tests',
@@ -68,8 +70,12 @@ void main(List<String> arguments) {
 }
 
 Never showUsage(ArgParser parser) {
-  print('dpp - A better dart pub publish - v1.1.0');
-  print('Usage: dpp [options] <new version number> [message]');
+  final name = pubspec.name;
+  final desc = pubspec.description.split('.').first;
+  final version = pubspec.version;
+
+  print('$name - $desc - v$version');
+  print('Usage: $name [options] <new version number> [message]');
   print(parser.usage);
   exit(wrongUsage);
 }
