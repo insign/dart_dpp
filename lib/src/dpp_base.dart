@@ -164,10 +164,19 @@ class DartPubPublish {
   Future<void> run(String version,
       {String? message = 'Update version number'}) async {
     String? oldChangeLogContents;
-    String oldPubspecContents = await _pubspecFile.readAsString();
+    String oldPubspecContents = _pubspecFile.readAsStringSync();
+    File pubspec2dartFile =
+        File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
+    String? oldPubspec2dartContents =
+        _pubspec2dart && pubspec2dartFile.existsSync()
+            ? pubspec2dartFile.readAsStringSync()
+            : null;
     final yaml = loadYaml(oldPubspecContents);
     final oldVersion = Version.parse(yaml['version']);
     Version newVersion;
+    bool changedChangeLog = false,
+        changedPubspec = false,
+        changedPubspec2dart = false;
 
     try {
       newVersion = Version.parse(version);
@@ -206,8 +215,24 @@ class DartPubPublish {
 
       _pubspecFile.writeAsStringSync(yamlString);
       log('Updated version in pubspec.yaml from $oldVersion to $newVersion');
+      changedPubspec = true;
     }
     try {
+      if (_get) {
+        // Run pub get
+        log('Running dart pub get...');
+        await runCommand('dart', ['pub', 'get']);
+      }
+
+      if (_analyze) {
+        log('Running dart analyze...');
+        await runCommand('dart', ['analyze']);
+      }
+      if (_tests) {
+        log('Running dart tests...');
+        await runCommand('dart', ['test']);
+      }
+
       if (_pubspec2dart) {
         // Create the pubspec.dart file
         log('Creating pubspec.dart... inside lib folder');
@@ -218,16 +243,10 @@ class DartPubPublish {
           final dest = path.join(_workingDir.path, 'lib', 'pubspec.dart');
           final y2d = Yaml2Dart(_pubspecFile.path, dest);
           await y2d.convert();
+          changedPubspec2dart = true;
         }
       }
 
-      if (_get) {
-        // Run pub get
-        log('Running dart pub get...');
-        await runCommand('dart', ['pub', 'get']);
-      }
-
-      // Run Dart commands to fix, format, analyze, and test the package
       if (_fix) {
         log('Running dart fix --apply...');
         await runCommand('dart', ['fix', '--apply']);
@@ -235,14 +254,6 @@ class DartPubPublish {
       if (_format) {
         log('Running dart format...');
         await runCommand('dart', ['format', '.']);
-      }
-      if (_analyze) {
-        log('Running dart analyze...');
-        await runCommand('dart', ['analyze']);
-      }
-      if (_tests) {
-        log('Running dart tests...');
-        await runCommand('dart', ['test']);
       }
 
       if (_changelog) {
@@ -252,6 +263,7 @@ class DartPubPublish {
         final newContents =
             '## v$newVersion\n- $message\n$oldChangeLogContents';
         await _changeLogFile.writeAsString(newContents);
+        changedChangeLog = true;
       }
 
       if (_publish) {
@@ -263,15 +275,23 @@ class DartPubPublish {
       // Rollback the changes to the pubspec.yaml file
       log(e.toString(), error: true);
 
-      if (_pubspec) {
+      if (_pubspec && changedPubspec) {
         log('Rolling back changes to pubspec.yaml...');
         _pubspecFile.writeAsStringSync(oldPubspecContents);
       }
 
       // Rollback the changes to the CHANGELOG.md file
-      if (_changelog && oldChangeLogContents != null) {
+      if (_changelog && oldChangeLogContents != null && changedChangeLog) {
         log('Rolling back changes to CHANGELOG.md...');
         _changeLogFile.writeAsStringSync(oldChangeLogContents);
+      }
+
+      // Rollback the changes to the pubspec2dart file
+      if (_pubspec2dart &&
+          oldPubspec2dartContents != null &&
+          changedPubspec2dart) {
+        log('Rolling back changes to pubspec2dart...');
+        pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
       }
 
       exit(generalError);

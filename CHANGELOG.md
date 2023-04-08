@@ -1,3 +1,5 @@
+## v2.1.0
+- changed order of operations and better rollback on errors
 ## v2.0.12
 - hotfix..
 ## v2.0.11
