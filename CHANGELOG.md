@@ -1,3 +1,5 @@
+## v2.2.0
+- let dpp separate tests by tag dpp
 ## v2.1.0
 - changed order of operations and better rollback on errors
 ## v2.0.12

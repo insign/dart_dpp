@@ -12,8 +12,6 @@ import 'package:pub_semver/pub_semver.dart';
 
 import 'package:yaml2dart/yaml2dart.dart';
 
-// @TODO add publish command
-
 /// A utility class to publish a Dart package to pub.dev.
 class DartPubPublish {
   /// The file path to the pubspec file.
@@ -230,7 +228,7 @@ class DartPubPublish {
       }
       if (_tests) {
         log('Running dart tests...');
-        await runCommand('dart', ['test']);
+        await runCommand('dart', ['test', '--exclude-tags', 'dpp']);
       }
 
       if (_pubspec2dart) {
@@ -284,6 +282,11 @@ class DartPubPublish {
       if (_changelog && oldChangeLogContents != null && changedChangeLog) {
         log('Rolling back changes to CHANGELOG.md...');
         _changeLogFile.writeAsStringSync(oldChangeLogContents);
+      }
+
+      if (_tests) {
+        log('Running last dart tests...');
+        await runCommand('dart', ['test', '--tags', 'dpp']);
       }
 
       // Rollback the changes to the pubspec2dart file
