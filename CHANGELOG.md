@@ -1,3 +1,5 @@
+## v2.2.1
+- pub upgrade
 ## v2.2.0
 - let dpp separate tests by tag dpp
 ## v2.1.0
