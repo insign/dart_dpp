@@ -66,8 +66,9 @@ void main(List<String> args) {
   }
   final String version = argResults.rest.first;
 
-  final String? message =
-      argResults.rest.length < 2 ? null : argResults.rest.skip(1).join(' ');
+  final String message = argResults.rest.length < 2
+      ? 'Update version number'
+      : argResults.rest.skip(1).join(' ');
 
   final dpp = DartPubPublish(
       git: argResults['git'],

@@ -160,7 +160,7 @@ class DartPubPublish {
   ///
   /// Throws a [PackageVersionAlreadyExistsException] if the package version already exists on pub.dev.
   Future<void> run(String version,
-      {String? message = 'Update version number'}) async {
+      {String message = 'Update version number'}) async {
     String? oldChangeLogContents;
     String oldPubspecContents = _pubspecFile.readAsStringSync();
     File pubspec2dartFile =
@@ -307,7 +307,7 @@ class DartPubPublish {
         // Commit and push the changes and tag the new version
         log('Committing and pushing changes...');
         await runCommand('git', ['add', '.']);
-        await runCommand('git', ['commit', '-m', message!]);
+        await runCommand('git', ['commit', '-m', message]);
         log('Tagging new version...');
         await runCommand('git', ['tag', 'v$newVersion']);
         await runCommand('git', ['push']);
