@@ -251,7 +251,7 @@ class DartPubPublish {
       }
       if (_format) {
         log('Running dart format...');
-        await runCommand('dart', ['format', '.']);
+        await runCommand('dart', ['format', '.', '--line-length', '120']);
       }
 
       if (_changelog) {
