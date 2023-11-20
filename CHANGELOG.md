@@ -1,3 +1,7 @@
+## v2.6.2
+- pub upgrade
+## v2.6.1
+- pub upgrade
 ## v2.6.0
 - Now we use dart format --line-length=120
 ## v2.2.1

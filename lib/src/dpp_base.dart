@@ -107,16 +107,13 @@ class DartPubPublish {
       analyze = true,
       pubPublish = true,
       verbose = true})
-      : _workingDir =
-            workingDir != null ? Directory(workingDir) : Directory.current,
+      : _workingDir = workingDir != null ? Directory(workingDir) : Directory.current,
         _pubspecFile = pubspecFile != null
             ? File(pubspecFile)
-            : File(path.join(
-                workingDir ?? Directory.current.path, 'pubspec.yaml')),
+            : File(path.join(workingDir ?? Directory.current.path, 'pubspec.yaml')),
         _changeLogFile = changeLogFile != null
             ? File(changeLogFile)
-            : File(path.join(
-                workingDir ?? Directory.current.path, 'CHANGELOG.md')),
+            : File(path.join(workingDir ?? Directory.current.path, 'CHANGELOG.md')),
         _get = pubGet,
         _git = git,
         _anyBranch = anyBranch,
@@ -159,22 +156,16 @@ class DartPubPublish {
   /// - [_git] Whether to commit and push the changes and tag the new version. Default is true.
   ///
   /// Throws a [PackageVersionAlreadyExistsException] if the package version already exists on pub.dev.
-  Future<void> run(String version,
-      {String message = 'Update version number'}) async {
+  Future<void> run(String version, {String message = 'Update version number'}) async {
     String? oldChangeLogContents;
     String oldPubspecContents = _pubspecFile.readAsStringSync();
-    File pubspec2dartFile =
-        File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
+    File pubspec2dartFile = File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
     String? oldPubspec2dartContents =
-        _pubspec2dart && pubspec2dartFile.existsSync()
-            ? pubspec2dartFile.readAsStringSync()
-            : null;
+        _pubspec2dart && pubspec2dartFile.existsSync() ? pubspec2dartFile.readAsStringSync() : null;
     final yaml = loadYaml(oldPubspecContents);
     final oldVersion = Version.parse(yaml['version']);
     Version newVersion;
-    bool changedChangeLog = false,
-        changedPubspec = false,
-        changedPubspec2dart = false;
+    bool changedChangeLog = false, changedPubspec = false, changedPubspec2dart = false;
 
     try {
       newVersion = Version.parse(version);
@@ -258,8 +249,7 @@ class DartPubPublish {
         // Add the new version number and change log message to the head of the CHANGELOG.md file
         log('Updating CHANGELOG.md...');
         oldChangeLogContents = await _changeLogFile.readAsString();
-        final newContents =
-            '## v$newVersion\n- $message\n$oldChangeLogContents';
+        final newContents = '## v$newVersion\n- $message\n$oldChangeLogContents';
         await _changeLogFile.writeAsString(newContents);
         changedChangeLog = true;
       }
@@ -290,9 +280,7 @@ class DartPubPublish {
       }
 
       // Rollback the changes to the pubspec2dart file
-      if (_pubspec2dart &&
-          oldPubspec2dartContents != null &&
-          changedPubspec2dart) {
+      if (_pubspec2dart && oldPubspec2dartContents != null && changedPubspec2dart) {
         log('Rolling back changes to pubspec2dart...');
         pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
       }
@@ -325,8 +313,7 @@ class DartPubPublish {
   /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console and
   /// the program is terminated with that exit code.
   Future<void> runCommand(String command, List<String> args) async {
-    final process =
-        await Process.start(command, args, workingDirectory: _workingDir.path);
+    final process = await Process.start(command, args, workingDirectory: _workingDir.path);
     process.stdout.transform(utf8.decoder).listen((data) {
       // Output the data as soon as it is received
       print(data);
@@ -360,9 +347,8 @@ class DartPubPublish {
   }
 
   Future<bool> isBranch(String? branch) async {
-    final ProcessResult result = await Process.run(
-        'git', ['branch', '--show-current'],
-        workingDirectory: _workingDir.path);
+    final ProcessResult result =
+        await Process.run('git', ['branch', '--show-current'], workingDirectory: _workingDir.path);
 
     final currentBranchName = result.stdout.trim();
 

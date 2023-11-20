@@ -11,42 +11,20 @@ void main(List<String> args) {
 
   final parser = ArgParser()
     ..addCommand('') // No command name means this is the default command.
-    ..addFlag('git',
-        defaultsTo: true,
-        negatable: true,
-        help: 'Run git commands: add, commit, tag and push.')
-    ..addFlag('any-branch',
-        defaultsTo: false,
-        negatable: false,
-        help: 'Allow to run on any branch.')
-    ..addOption('branch',
-        help: 'The branch to run on. Default is main or master.',
-        valueHelp: 'branch_name')
-    ..addFlag('pubspec',
-        defaultsTo: true,
-        negatable: true,
-        help: 'Update the pubspec.yaml file.')
+    ..addFlag('git', defaultsTo: true, negatable: true, help: 'Run git commands: add, commit, tag and push.')
+    ..addFlag('any-branch', defaultsTo: false, negatable: false, help: 'Allow to run on any branch.')
+    ..addOption('branch', help: 'The branch to run on. Default is main or master.', valueHelp: 'branch_name')
+    ..addFlag('pubspec', defaultsTo: true, negatable: true, help: 'Update the pubspec.yaml file.')
     ..addFlag('pubspec2dart',
-        defaultsTo: true,
-        negatable: true,
-        help: 'Create the pubspec.dart file on the lib/ of the project.')
-    ..addFlag('changelog',
-        defaultsTo: true, negatable: true, help: 'Update the changelog.')
-    ..addFlag('tests',
-        defaultsTo: true, negatable: true, help: 'Run dart tests.')
+        defaultsTo: true, negatable: true, help: 'Create the pubspec.dart file on the lib/ of the project.')
+    ..addFlag('changelog', defaultsTo: true, negatable: true, help: 'Update the changelog.')
+    ..addFlag('tests', defaultsTo: true, negatable: true, help: 'Run dart tests.')
     ..addFlag('fix', defaultsTo: true, negatable: true, help: 'Run dart fix.')
-    ..addFlag('format',
-        defaultsTo: true, negatable: true, help: 'Run dart format.')
-    ..addFlag('analyze',
-        defaultsTo: true, negatable: true, help: 'Run dart analyze.')
-    ..addFlag('publish',
-        defaultsTo: true, negatable: true, help: 'Publish on pub.dev.')
-    ..addFlag('verbose',
-        defaultsTo: true, negatable: true, help: 'Show verbose output.')
-    ..addFlag('version',
-        abbr: 'v',
-        negatable: false,
-        help: 'Show the version of ${pubspec.name}.')
+    ..addFlag('format', defaultsTo: true, negatable: true, help: 'Run dart format.')
+    ..addFlag('analyze', defaultsTo: true, negatable: true, help: 'Run dart analyze.')
+    ..addFlag('publish', defaultsTo: true, negatable: true, help: 'Publish on pub.dev.')
+    ..addFlag('verbose', defaultsTo: true, negatable: true, help: 'Show verbose output.')
+    ..addFlag('version', abbr: 'v', negatable: false, help: 'Show the version of ${pubspec.name}.')
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Show usage help.');
 
   ArgResults argResults;
@@ -66,9 +44,7 @@ void main(List<String> args) {
   }
   final String version = argResults.rest.first;
 
-  final String message = argResults.rest.length < 2
-      ? 'Update version number'
-      : argResults.rest.skip(1).join(' ');
+  final String message = argResults.rest.length < 2 ? 'Update version number' : argResults.rest.skip(1).join(' ');
 
   final dpp = DartPubPublish(
       git: argResults['git'],
