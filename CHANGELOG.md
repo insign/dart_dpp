@@ -1,4 +1,6 @@
 ## v2.6.3
+- updated dependencies
+## v2.6.3
 - pub upgrade after years
 ## v2.6.2
 - pub upgrade
