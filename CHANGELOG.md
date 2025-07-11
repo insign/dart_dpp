@@ -1,3 +1,5 @@
+## v2.7.2
+- small changes
 ## v2.7.1
 - updated dependencies
 ## v2.6.3
