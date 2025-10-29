@@ -1,3 +1,5 @@
+## v2.7.3
+- update dart version and dependencies
 ## v2.7.2
 - small changes
 ## v2.7.1
