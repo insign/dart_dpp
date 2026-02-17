@@ -337,8 +337,7 @@ class DartPubPublish {
     });
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
-      print('Command exited with code $exitCode');
-      exit(exitCode);
+      throw Exception('Command exited with code $exitCode');
     }
   }
 
