@@ -269,6 +269,22 @@ class DartPubPublish {
         log('Publishing package to pub.dev...');
         await runCommand('dart', ['pub', 'publish', '--force']);
       }
+
+      if (_git) {
+        final onBranch = await isBranch(_branch);
+        if (!_anyBranch && !onBranch) {
+          log('Not on $_branch branch, skipping git commands', error: true);
+        } else {
+          // Commit and push the changes and tag the new version
+          log('Committing and pushing changes...');
+          await runCommand('git', ['add', '.']);
+          await runCommand('git', ['commit', '-m', message]);
+          log('Tagging new version...');
+          await runCommand('git', ['tag', 'v$newVersion']);
+          await runCommand('git', ['push']);
+          await runCommand('git', ['push', '--tags']);
+        }
+      }
     } on Exception catch (e) {
       // Rollback the changes to the pubspec.yaml file
       log(e.toString(), error: true);
@@ -286,7 +302,9 @@ class DartPubPublish {
 
       if (_tests) {
         log('Running last dart tests...');
-        await runCommand('dart', ['test', '--tags', 'dpp']);
+        try {
+          await runCommand('dart', ['test', '--tags', 'dpp']);
+        } catch (_) {}
       }
 
       // Rollback the changes to the pubspec2dart file
@@ -297,22 +315,7 @@ class DartPubPublish {
         pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
       }
 
-      exit(generalError);
-    }
-    if (_git) {
-      final onBranch = await isBranch(_branch);
-      if (!_anyBranch && !onBranch) {
-        log('Not on $_branch branch, skipping git commands', error: true);
-      } else {
-        // Commit and push the changes and tag the new version
-        log('Committing and pushing changes...');
-        await runCommand('git', ['add', '.']);
-        await runCommand('git', ['commit', '-m', message]);
-        log('Tagging new version...');
-        await runCommand('git', ['tag', 'v$newVersion']);
-        await runCommand('git', ['push']);
-        await runCommand('git', ['push', '--tags']);
-      }
+      rethrow;
     }
   }
 
@@ -338,7 +341,7 @@ class DartPubPublish {
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
       print('Command exited with code $exitCode');
-      exit(exitCode);
+      throw Exception('Command $command exited with code $exitCode');
     }
   }
 

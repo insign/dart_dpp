@@ -4,7 +4,7 @@ import 'package:args/args.dart';
 import 'package:dpp/src/dpp.dart';
 import 'package:dpp/pubspec.dart' as pubspec;
 
-void main(List<String> args) {
+void main(List<String> args) async {
   if (args.isNotEmpty && (args.first == '-v' || args.first == '--version')) {
     showVersion(args);
   }
@@ -83,7 +83,11 @@ void main(List<String> args) {
       analyze: argResults['analyze'],
       pubPublish: argResults['publish'],
       verbose: argResults['verbose']);
-  dpp.run(version, message: message);
+  try {
+    await dpp.run(version, message: message);
+  } catch (e) {
+    exit(generalError);
+  }
 }
 
 Never showUsage(ArgParser parser) {
