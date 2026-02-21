@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:all_exit_codes/all_exit_codes.dart';
+import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
 import 'package:dpp/exceptions/package_version_already_exists_exception.dart';
@@ -297,7 +298,7 @@ class DartPubPublish {
         pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
       }
 
-      exit(generalError);
+      rethrow;
     }
     if (_git) {
       final onBranch = await isBranch(_branch);
@@ -337,8 +338,7 @@ class DartPubPublish {
     });
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
-      print('Command exited with code $exitCode');
-      exit(exitCode);
+      throw CommandFailedException(command, args, exitCode);
     }
   }
 
