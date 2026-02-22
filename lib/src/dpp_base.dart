@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
@@ -328,15 +327,13 @@ class DartPubPublish {
   Future<void> runCommand(String command, List<String> args) async {
     final process =
         await Process.start(command, args, workingDirectory: _workingDir.path);
-    process.stdout.transform(utf8.decoder).listen((data) {
-      // Output the data as soon as it is received
-      print(data);
-    });
-    process.stderr.transform(utf8.decoder).listen((data) {
-      // Output the data as soon as it is received
-      print(data);
-    });
+
+    final stdoutFuture = stdout.addStream(process.stdout);
+    final stderrFuture = stderr.addStream(process.stderr);
+
     final exitCode = await process.exitCode;
+    await Future.wait([stdoutFuture, stderrFuture]);
+
     if (exitCode != 0) {
       throw CommandFailedException(command, args, exitCode);
     }
