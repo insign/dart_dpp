@@ -328,14 +328,12 @@ class DartPubPublish {
   Future<void> runCommand(String command, List<String> args) async {
     final process =
         await Process.start(command, args, workingDirectory: _workingDir.path);
-    process.stdout.transform(utf8.decoder).listen((data) {
-      // Output the data as soon as it is received
-      print(data);
-    });
-    process.stderr.transform(utf8.decoder).listen((data) {
-      // Output the data as soon as it is received
-      print(data);
-    });
+
+    await Future.wait([
+      stdout.addStream(process.stdout),
+      stderr.addStream(process.stderr),
+    ]);
+
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
       throw CommandFailedException(command, args, exitCode);
