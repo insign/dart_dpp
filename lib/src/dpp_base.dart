@@ -162,6 +162,7 @@ class DartPubPublish {
   Future<void> run(String version,
       {String message = 'Update version number'}) async {
     String? oldChangeLogContents;
+    bool changeLogExisted = true;
     String oldPubspecContents = _pubspecFile.readAsStringSync();
     File pubspec2dartFile =
         File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
@@ -258,7 +259,12 @@ class DartPubPublish {
       if (_changelog) {
         // Add the new version number and change log message to the head of the CHANGELOG.md file
         log('Updating CHANGELOG.md...');
-        oldChangeLogContents = await _changeLogFile.readAsString();
+        if (await _changeLogFile.exists()) {
+          oldChangeLogContents = await _changeLogFile.readAsString();
+        } else {
+          oldChangeLogContents = '';
+          changeLogExisted = false;
+        }
         final newContents =
             '## v$newVersion\n- $message\n$oldChangeLogContents';
         await _changeLogFile.writeAsString(newContents);
@@ -282,7 +288,13 @@ class DartPubPublish {
       // Rollback the changes to the CHANGELOG.md file
       if (_changelog && oldChangeLogContents != null && changedChangeLog) {
         log('Rolling back changes to CHANGELOG.md...');
-        _changeLogFile.writeAsStringSync(oldChangeLogContents);
+        if (changeLogExisted) {
+          _changeLogFile.writeAsStringSync(oldChangeLogContents);
+        } else {
+          if (_changeLogFile.existsSync()) {
+            _changeLogFile.deleteSync();
+          }
+        }
       }
 
       if (_tests) {
