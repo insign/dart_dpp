@@ -58,7 +58,7 @@ void main(List<String> args) async {
   }
 
   if (argResults['version']) {
-    showVersion(parser);
+    showVersion(args);
   }
 
   if (argResults['help'] || argResults.rest.isEmpty) {
@@ -103,10 +103,10 @@ Never showUsage(ArgParser parser) {
   exit(wrongUsage);
 }
 
-Never showVersion(args) {
+Never showVersion(List<String> args) {
   final version = pubspec.version;
 
-  if (args.first == '-v') {
+  if (args.contains('-v')) {
     print(version);
   } else {
     final name = pubspec.name;
