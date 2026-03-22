@@ -47,6 +47,10 @@ void main(List<String> args) async {
         abbr: 'v',
         negatable: false,
         help: 'Show the version of ${pubspec.name}.')
+    ..addFlag('dry-run',
+        defaultsTo: false,
+        negatable: false,
+        help: 'Run the script without making any changes.')
     ..addFlag('help', abbr: 'h', negatable: false, help: 'Show usage help.');
 
   ArgResults argResults;
@@ -82,7 +86,8 @@ void main(List<String> args) async {
       format: argResults['format'],
       analyze: argResults['analyze'],
       pubPublish: argResults['publish'],
-      verbose: argResults['verbose']);
+      verbose: argResults['verbose'],
+      dryRun: argResults['dry-run']);
 
   try {
     await dpp.run(version, message: message);

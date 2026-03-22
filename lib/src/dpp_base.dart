@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
@@ -61,6 +60,9 @@ class DartPubPublish {
   /// A flag indicating whether to print log messages to the console.
   final bool _verbose;
 
+  /// A flag indicating whether to perform a dry run.
+  final bool _dryRun;
+
   /// Creates a new instance of [DartPubPublish].
   ///
   /// [pubspecFile] and [changeLogFile] are the file paths to the pubspec and
@@ -105,7 +107,8 @@ class DartPubPublish {
       format = true,
       analyze = true,
       pubPublish = true,
-      verbose = true})
+      verbose = true,
+      dryRun = false})
       : _workingDir =
             workingDir != null ? Directory(workingDir) : Directory.current,
         _pubspecFile = pubspecFile != null
@@ -128,7 +131,8 @@ class DartPubPublish {
         _format = format,
         _analyze = analyze,
         _publish = pubPublish,
-        _verbose = verbose {
+        _verbose = verbose,
+        _dryRun = dryRun {
     if (!_pubspecFile.existsSync()) {
       throw PubspecNotFound(_pubspecFile.path);
     }
@@ -212,9 +216,13 @@ class DartPubPublish {
         'version: $newVersion',
       );
 
-      _pubspecFile.writeAsStringSync(updatedPubspecContents);
-      log('Updated version in pubspec.yaml from $oldVersion to $newVersion');
-      changedPubspec = true;
+      if (_dryRun) {
+        log('[DRY-RUN] Would update version in pubspec.yaml to $newVersion');
+      } else {
+        _pubspecFile.writeAsStringSync(updatedPubspecContents);
+        log('Updated version in pubspec.yaml from $oldVersion to $newVersion');
+        changedPubspec = true;
+      }
     }
     try {
       if (_get) {
@@ -240,9 +248,13 @@ class DartPubPublish {
           log('No lib folder found, ignoring pubspec2dart option', error: true);
         } else {
           final dest = path.join(_workingDir.path, 'lib', 'pubspec.dart');
-          final y2d = Yaml2Dart(_pubspecFile.path, dest);
-          await y2d.convert();
-          changedPubspec2dart = true;
+          if (_dryRun) {
+            log('[DRY-RUN] Would create pubspec.dart in $dest');
+          } else {
+            final y2d = Yaml2Dart(_pubspecFile.path, dest);
+            await y2d.convert();
+            changedPubspec2dart = true;
+          }
         }
       }
 
@@ -266,8 +278,12 @@ class DartPubPublish {
         }
         final newContents =
             '## v$newVersion\n- $message\n$oldChangeLogContents';
-        await _changeLogFile.writeAsString(newContents);
-        changedChangeLog = true;
+        if (_dryRun) {
+          log('[DRY-RUN] Would update CHANGELOG.md with:\n## v$newVersion\n- $message');
+        } else {
+          await _changeLogFile.writeAsString(newContents);
+          changedChangeLog = true;
+        }
       }
 
       if (_publish) {
@@ -335,6 +351,10 @@ class DartPubPublish {
   /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console and
   /// the program is terminated with that exit code.
   Future<void> runCommand(String command, List<String> args) async {
+    if (_dryRun) {
+      log('[DRY-RUN] Would run: $command ${args.join(' ')}');
+      return;
+    }
     final process =
         await Process.start(command, args, workingDirectory: _workingDir.path);
     await Future.wait([
