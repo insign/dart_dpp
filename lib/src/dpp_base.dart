@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
