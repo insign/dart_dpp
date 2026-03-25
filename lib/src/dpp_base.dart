@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
@@ -300,11 +299,13 @@ class DartPubPublish {
       }
 
       // Rollback the changes to the pubspec2dart file
-      if (_pubspec2dart &&
-          oldPubspec2dartContents != null &&
-          changedPubspec2dart) {
+      if (_pubspec2dart && changedPubspec2dart) {
         log('Rolling back changes to pubspec2dart...');
-        pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
+        if (oldPubspec2dartContents != null) {
+          pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
+        } else if (pubspec2dartFile.existsSync()) {
+          pubspec2dartFile.deleteSync();
+        }
       }
 
       rethrow;
