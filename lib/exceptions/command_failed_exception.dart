@@ -13,6 +13,5 @@ class CommandFailedException implements Exception {
   CommandFailedException(this.command, this.args, this.exitCode);
 
   @override
-  String toString() =>
-      'Command "$command ${args.join(' ')}" failed with exit code $exitCode.';
+  String toString() => 'Command "$command ${args.join(' ')}" failed with exit code $exitCode.';
 }

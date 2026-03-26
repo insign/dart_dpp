@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
@@ -106,16 +105,13 @@ class DartPubPublish {
       analyze = true,
       pubPublish = true,
       verbose = true})
-      : _workingDir =
-            workingDir != null ? Directory(workingDir) : Directory.current,
+      : _workingDir = workingDir != null ? Directory(workingDir) : Directory.current,
         _pubspecFile = pubspecFile != null
             ? File(pubspecFile)
-            : File(path.join(
-                workingDir ?? Directory.current.path, 'pubspec.yaml')),
+            : File(path.join(workingDir ?? Directory.current.path, 'pubspec.yaml')),
         _changeLogFile = changeLogFile != null
             ? File(changeLogFile)
-            : File(path.join(
-                workingDir ?? Directory.current.path, 'CHANGELOG.md')),
+            : File(path.join(workingDir ?? Directory.current.path, 'CHANGELOG.md')),
         _get = pubGet,
         _git = git,
         _anyBranch = anyBranch,
@@ -158,23 +154,17 @@ class DartPubPublish {
   /// - [_git] Whether to commit and push the changes and tag the new version. Default is true.
   ///
   /// Throws a [PackageVersionAlreadyExistsException] if the package version already exists on pub.dev.
-  Future<void> run(String version,
-      {String message = 'Update version number'}) async {
+  Future<void> run(String version, {String message = 'Update version number'}) async {
     String? oldChangeLogContents;
     bool changeLogExisted = true;
     String oldPubspecContents = _pubspecFile.readAsStringSync();
-    File pubspec2dartFile =
-        File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
+    File pubspec2dartFile = File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
     String? oldPubspec2dartContents =
-        _pubspec2dart && pubspec2dartFile.existsSync()
-            ? pubspec2dartFile.readAsStringSync()
-            : null;
+        _pubspec2dart && pubspec2dartFile.existsSync() ? pubspec2dartFile.readAsStringSync() : null;
     final yaml = loadYaml(oldPubspecContents);
     final oldVersion = Version.parse(yaml['version']);
     Version newVersion;
-    bool changedChangeLog = false,
-        changedPubspec = false,
-        changedPubspec2dart = false;
+    bool changedChangeLog = false, changedPubspec = false, changedPubspec2dart = false;
 
     try {
       newVersion = Version.parse(version);
@@ -264,8 +254,7 @@ class DartPubPublish {
           oldChangeLogContents = '';
           changeLogExisted = false;
         }
-        final newContents =
-            '## v$newVersion\n- $message\n$oldChangeLogContents';
+        final newContents = '## v$newVersion\n- $message\n$oldChangeLogContents';
         await _changeLogFile.writeAsString(newContents);
         changedChangeLog = true;
       }
@@ -296,13 +285,15 @@ class DartPubPublish {
 
       if (_tests) {
         log('Running last dart tests...');
-        await runCommand('dart', ['test', '--tags', 'dpp']);
+        try {
+          await runCommand('dart', ['test', '--tags', 'dpp']);
+        } on CommandFailedException catch (_) {
+          // Ignore command failures during rollback to not mask the original error.
+        }
       }
 
       // Rollback the changes to the pubspec2dart file
-      if (_pubspec2dart &&
-          oldPubspec2dartContents != null &&
-          changedPubspec2dart) {
+      if (_pubspec2dart && oldPubspec2dartContents != null && changedPubspec2dart) {
         log('Rolling back changes to pubspec2dart...');
         pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
       }
@@ -335,8 +326,7 @@ class DartPubPublish {
   /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console and
   /// the program is terminated with that exit code.
   Future<void> runCommand(String command, List<String> args) async {
-    final process =
-        await Process.start(command, args, workingDirectory: _workingDir.path);
+    final process = await Process.start(command, args, workingDirectory: _workingDir.path);
     await Future.wait([
       stdout.addStream(process.stdout),
       stderr.addStream(process.stderr),
@@ -365,9 +355,8 @@ class DartPubPublish {
   }
 
   Future<bool> isBranch(String? branch) async {
-    final ProcessResult result = await Process.run(
-        'git', ['branch', '--show-current'],
-        workingDirectory: _workingDir.path);
+    final ProcessResult result =
+        await Process.run('git', ['branch', '--show-current'], workingDirectory: _workingDir.path);
 
     final currentBranchName = result.stdout.trim();
 

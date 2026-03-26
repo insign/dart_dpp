@@ -9,8 +9,7 @@ void main() {
     late File changeLogFile;
 
     setUp(() async {
-      tempDir = await Directory.systemTemp
-          .createTemp('pub_publish_test_preservation');
+      tempDir = await Directory.systemTemp.createTemp('pub_publish_test_preservation');
       pubspecFile = File('${tempDir.path}/pubspec.yaml');
       changeLogFile = File('${tempDir.path}/CHANGELOG.md');
       await changeLogFile.writeAsString('');
