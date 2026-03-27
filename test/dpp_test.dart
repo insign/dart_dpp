@@ -45,6 +45,38 @@ void main() {
       expect(updatedChangeLog, expectedChangeLog);
     });
 
+    test('rollback on git failure', () async {
+      final publish = DartPubPublish(
+          pubspecFile: pubspecFile.path,
+          changeLogFile: changeLogFile.path,
+          workingDir: tempDir.path,
+          git: true,
+          anyBranch: true,
+          analyze: false,
+          format: false,
+          fix: false,
+          tests: false,
+          pubGet: false,
+          pubspec: true,
+          pubspec2dart: false,
+          pubPublish: false);
+
+      // Since it's not a git repository, the git commands will fail
+      try {
+        await publish.run('2.0.0', message: 'New feature');
+        fail('Should have thrown an exception');
+      } catch (e) {
+        // Expected
+      }
+
+      final updatedPubspec = pubspecFile.readAsStringSync();
+      final expectedPubspec = 'name: my_package\nversion: 1.0.0';
+      expect(updatedPubspec, expectedPubspec);
+
+      final updatedChangeLog = changeLogFile.readAsStringSync();
+      expect(updatedChangeLog, isEmpty);
+    });
+
     test('using alias - change changelog and pubspec', () async {
       final publish = DartPubPublish(
           pubspecFile: pubspecFile.path,
