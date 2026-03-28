@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
@@ -174,7 +173,8 @@ class DartPubPublish {
     Version newVersion;
     bool changedChangeLog = false,
         changedPubspec = false,
-        changedPubspec2dart = false;
+        changedPubspec2dart = false,
+        published = false;
 
     try {
       newVersion = Version.parse(version);
@@ -274,10 +274,32 @@ class DartPubPublish {
         // Publish the package to pub.dev
         log('Publishing package to pub.dev...');
         await runCommand('dart', ['pub', 'publish', '--force']);
+        published = true;
+      }
+
+      if (_git) {
+        final onBranch = await isBranch(_branch);
+        if (!_anyBranch && !onBranch) {
+          log('Not on $_branch branch, skipping git commands', error: true);
+        } else {
+          // Commit and push the changes and tag the new version
+          log('Committing and pushing changes...');
+          await runCommand('git', ['add', '.']);
+          await runCommand('git', ['commit', '-m', message]);
+          log('Tagging new version...');
+          await runCommand('git', ['tag', 'v$newVersion']);
+          await runCommand('git', ['push']);
+          await runCommand('git', ['push', '--tags']);
+        }
       }
     } on Exception catch (e) {
       // Rollback the changes to the pubspec.yaml file
       log(e.toString(), error: true);
+
+      if (published) {
+        log('Package was successfully published to pub.dev, skipping rollback to prevent desync.');
+        rethrow;
+      }
 
       if (_pubspec && changedPubspec) {
         log('Rolling back changes to pubspec.yaml...');
@@ -296,33 +318,25 @@ class DartPubPublish {
 
       if (_tests) {
         log('Running last dart tests...');
-        await runCommand('dart', ['test', '--tags', 'dpp']);
+        try {
+          await runCommand('dart', ['test', '--tags', 'dpp']);
+        } on CommandFailedException catch (_) {
+          // Ignore exceptions to not mask the original exception
+        }
       }
 
       // Rollback the changes to the pubspec2dart file
-      if (_pubspec2dart &&
-          oldPubspec2dartContents != null &&
-          changedPubspec2dart) {
-        log('Rolling back changes to pubspec2dart...');
-        pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
+      if (_pubspec2dart && changedPubspec2dart) {
+        if (oldPubspec2dartContents != null) {
+          log('Rolling back changes to pubspec2dart...');
+          pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
+        } else if (pubspec2dartFile.existsSync()) {
+          log('Deleting generated pubspec2dart...');
+          pubspec2dartFile.deleteSync();
+        }
       }
 
       rethrow;
-    }
-    if (_git) {
-      final onBranch = await isBranch(_branch);
-      if (!_anyBranch && !onBranch) {
-        log('Not on $_branch branch, skipping git commands', error: true);
-      } else {
-        // Commit and push the changes and tag the new version
-        log('Committing and pushing changes...');
-        await runCommand('git', ['add', '.']);
-        await runCommand('git', ['commit', '-m', message]);
-        log('Tagging new version...');
-        await runCommand('git', ['tag', 'v$newVersion']);
-        await runCommand('git', ['push']);
-        await runCommand('git', ['push', '--tags']);
-      }
     }
   }
 
