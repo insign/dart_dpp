@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:all_exit_codes/all_exit_codes.dart';
 import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
@@ -296,7 +295,12 @@ class DartPubPublish {
 
       if (_tests) {
         log('Running last dart tests...');
-        await runCommand('dart', ['test', '--tags', 'dpp']);
+        try {
+          await runCommand('dart', ['test', '--tags', 'dpp']);
+        } on CommandFailedException catch (e) {
+          log('Rollback tests failed, but continuing rollback process: ${e.toString()}',
+              error: true);
+        }
       }
 
       // Rollback the changes to the pubspec2dart file
