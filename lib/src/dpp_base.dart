@@ -296,7 +296,11 @@ class DartPubPublish {
 
       if (_tests) {
         log('Running last dart tests...');
-        await runCommand('dart', ['test', '--tags', 'dpp']);
+        try {
+          await runCommand('dart', ['test', '--tags', 'dpp']);
+        } on CommandFailedException catch (e) {
+          log('Tests failed during rollback: ${e.toString()}', error: true);
+        }
       }
 
       // Rollback the changes to the pubspec2dart file
