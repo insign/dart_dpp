@@ -4,6 +4,7 @@ import 'package:dpp/exceptions/command_failed_exception.dart';
 import 'package:dpp/exceptions/package_version_lower_exception.dart';
 import 'package:dpp/exceptions/pubspec_not_found.dart';
 import 'package:dpp/exceptions/package_version_already_exists_exception.dart';
+import 'package:dpp/exceptions/wrong_git_branch_exception.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -197,6 +198,13 @@ class DartPubPublish {
       throw PackageVersionLowerException(newVersion, oldVersion);
     }
 
+    if (_git && !_anyBranch) {
+      final onBranch = await isBranch(_branch);
+      if (!onBranch) {
+        throw WrongGitBranchException(_branch);
+      }
+    }
+
     log('Publishing package to pub.dev...');
     log('Old version: $oldVersion');
     log('New version: $newVersion');
@@ -314,19 +322,14 @@ class DartPubPublish {
       rethrow;
     }
     if (_git) {
-      final onBranch = await isBranch(_branch);
-      if (!_anyBranch && !onBranch) {
-        log('Not on $_branch branch, skipping git commands', error: true);
-      } else {
-        // Commit and push the changes and tag the new version
-        log('Committing and pushing changes...');
-        await runCommand('git', ['add', '.']);
-        await runCommand('git', ['commit', '-m', message]);
-        log('Tagging new version...');
-        await runCommand('git', ['tag', 'v$newVersion']);
-        await runCommand('git', ['push']);
-        await runCommand('git', ['push', '--tags']);
-      }
+      // Commit and push the changes and tag the new version
+      log('Committing and pushing changes...');
+      await runCommand('git', ['add', '.']);
+      await runCommand('git', ['commit', '-m', message]);
+      log('Tagging new version...');
+      await runCommand('git', ['tag', 'v$newVersion']);
+      await runCommand('git', ['push']);
+      await runCommand('git', ['push', '--tags']);
     }
   }
 
