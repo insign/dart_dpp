@@ -165,8 +165,9 @@ class DartPubPublish {
     String oldPubspecContents = _pubspecFile.readAsStringSync();
     File pubspec2dartFile =
         File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
+    bool pubspec2dartExisted = pubspec2dartFile.existsSync();
     String? oldPubspec2dartContents =
-        _pubspec2dart && pubspec2dartFile.existsSync()
+        _pubspec2dart && pubspec2dartExisted
             ? pubspec2dartFile.readAsStringSync()
             : null;
     final yaml = loadYaml(oldPubspecContents);
@@ -304,11 +305,13 @@ class DartPubPublish {
       }
 
       // Rollback the changes to the pubspec2dart file
-      if (_pubspec2dart &&
-          oldPubspec2dartContents != null &&
-          changedPubspec2dart) {
+      if (_pubspec2dart && changedPubspec2dart) {
         log('Rolling back changes to pubspec2dart...');
-        pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents);
+        if (pubspec2dartExisted) {
+          pubspec2dartFile.writeAsStringSync(oldPubspec2dartContents!);
+        } else if (pubspec2dartFile.existsSync()) {
+          pubspec2dartFile.deleteSync();
+        }
       }
 
       rethrow;

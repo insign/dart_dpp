@@ -87,4 +87,63 @@ void main() {
       tempDir.deleteSync(recursive: true);
     }
   });
+
+  test('Rollback deletes pubspec.dart if it was newly created', () async {
+    final tempDir = Directory.systemTemp.createTempSync('dpp_rollback_test2_');
+
+    try {
+      await Process.run('git', ['init'], workingDirectory: tempDir.path);
+      await Process.run('git', ['config', 'user.email', 'test@example.com'],
+          workingDirectory: tempDir.path);
+      await Process.run('git', ['config', 'user.name', 'Test User'],
+          workingDirectory: tempDir.path);
+
+      final pubspecFile = File(p.join(tempDir.path, 'pubspec.yaml'));
+      await pubspecFile.writeAsString('''
+name: test_pkg
+version: 1.0.0
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+''');
+
+      final libDir = Directory(p.join(tempDir.path, 'lib'))..createSync();
+      final pubspecDartFile = File(p.join(libDir.path, 'pubspec.dart'));
+
+      // 4. Create a failing test in test/ folder to trigger rollback after pubspec.dart is created
+      // In normal flow, tests run BEFORE pubspec.dart is created.
+      // So we must bypass tests or make publish fail to test rollback AFTER pubspec.dart is created.
+      // Easiest is to let pub publish fail because there's no publish configuration/credentials.
+
+      await Process.run('git', ['add', '.'], workingDirectory: tempDir.path);
+      await Process.run('git', ['commit', '-m', 'Initial commit'],
+          workingDirectory: tempDir.path);
+
+      final dppPath = p.join(Directory.current.path, 'bin', 'dpp.dart');
+      final result = await Process.run(
+        'dart',
+        [
+          dppPath,
+          '1.0.1',
+          '--pubspec',
+          '--pubspec2dart',
+          '--publish', // this will fail without proper setup
+          '--no-git',
+          '--no-tests', // skip tests so it reaches publish step
+        ],
+        workingDirectory: tempDir.path,
+      );
+
+      // Verify command failed
+      expect(result.exitCode, isNot(0));
+
+      // Verify rollback deleted pubspec.dart
+      expect(pubspecDartFile.existsSync(), isFalse);
+
+      // Check for rollback log output
+      expect(result.stdout.toString(), contains('Rolling back changes to pubspec2dart...'));
+
+    } finally {
+      tempDir.deleteSync(recursive: true);
+    }
+  });
 }
