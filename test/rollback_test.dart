@@ -79,8 +79,8 @@ void main() {
       expect(result.stdout.toString(), contains('Rolling back changes to pubspec.yaml...'));
       expect(result.stdout.toString(), contains('Running last dart tests...'));
       expect(result.stdout.toString(), contains('Tests failed during rollback')); // it logs on stdout with [ERROR] or stderr? Let's check stdout since log() prints.
-      // pubspec2dart was never created because tests failed before it!
-      // expect(result.stdout.toString(), contains('Rolling back changes to pubspec2dart...'));
+      // pubspec2dart was created before tests, so it should be rolled back!
+      expect(result.stdout.toString(), contains('Rolling back changes to pubspec2dart...'));
 
     } finally {
       // Cleanup
@@ -110,9 +110,8 @@ environment:
       final pubspecDartFile = File(p.join(libDir.path, 'pubspec.dart'));
 
       // 4. Create a failing test in test/ folder to trigger rollback after pubspec.dart is created
-      // In normal flow, tests run BEFORE pubspec.dart is created.
-      // So we must bypass tests or make publish fail to test rollback AFTER pubspec.dart is created.
-      // Easiest is to let pub publish fail because there's no publish configuration/credentials.
+      // Since pubspec.dart is created BEFORE tests, any test failure will trigger rollback
+      // of both pubspec.yaml and pubspec.dart.
 
       await Process.run('git', ['add', '.'], workingDirectory: tempDir.path);
       await Process.run('git', ['commit', '-m', 'Initial commit'],
