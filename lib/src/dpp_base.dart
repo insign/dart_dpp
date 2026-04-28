@@ -232,15 +232,6 @@ class DartPubPublish {
         await runCommand('dart', ['pub', 'get']);
       }
 
-      if (_analyze) {
-        log('Running dart analyze...');
-        await runCommand('dart', ['analyze']);
-      }
-      if (_tests) {
-        log('Running dart tests...');
-        await runCommand('dart', ['test', '--exclude-tags', 'dpp']);
-      }
-
       if (_pubspec2dart) {
         // Create the pubspec.dart file
         log('Creating pubspec.dart... inside lib folder');
@@ -262,6 +253,15 @@ class DartPubPublish {
       if (_format) {
         log('Running dart format...');
         await runCommand('dart', ['format', '.', '--line-length', '120']);
+      }
+
+      if (_analyze) {
+        log('Running dart analyze...');
+        await runCommand('dart', ['analyze']);
+      }
+      if (_tests) {
+        log('Running dart tests...');
+        await runCommand('dart', ['test', '--exclude-tags', 'dpp']);
       }
 
       if (_changelog) {
