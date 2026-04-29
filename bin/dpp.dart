@@ -6,7 +6,7 @@ import 'package:dpp/pubspec.dart' as pubspec;
 
 void main(List<String> args) async {
   if (args.isNotEmpty && (args.first == '-v' || args.first == '--version')) {
-    showVersion(args);
+    showVersion(args.first == '-v');
   }
 
   final parser = ArgParser()
@@ -58,7 +58,7 @@ void main(List<String> args) async {
   }
 
   if (argResults['version']) {
-    showVersion(parser);
+    showVersion(args.contains('-v'));
   }
 
   if (argResults['help'] || argResults.rest.isEmpty) {
@@ -103,10 +103,10 @@ Never showUsage(ArgParser parser) {
   exit(wrongUsage);
 }
 
-Never showVersion(args) {
+Never showVersion(bool isShort) {
   final version = pubspec.version;
 
-  if (args.first == '-v') {
+  if (isShort) {
     print(version);
   } else {
     final name = pubspec.name;
