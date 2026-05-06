@@ -25,7 +25,7 @@ void main() {
 name: my_package
 description: A description.
 # This is a comment
-version: 1.0.0
+version: 1.0.0 # This is an inline comment
 
 environment:
   sdk: '>=2.12.0 <3.0.0'
@@ -56,6 +56,7 @@ environment:
 
       // Check comment preservation
       expect(updatedContent, contains('# This is a comment'));
+      expect(updatedContent, contains('version: 1.0.1 # This is an inline comment'));
 
       // Check formatting preservation (empty line)
       expect(updatedContent, contains('\nenvironment:'));

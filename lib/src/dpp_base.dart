@@ -216,9 +216,9 @@ class DartPubPublish {
       // Replace the version number in the pubspec.yaml file
       log('Updating version in pubspec.yaml...');
 
-      final updatedPubspecContents = oldPubspecContents.replaceFirst(
-        RegExp(r'^version\s*:.*$', multiLine: true),
-        'version: $newVersion',
+      final updatedPubspecContents = oldPubspecContents.replaceFirstMapped(
+        RegExp(r'^(version\s*:\s*)(.*?)(?=\s*(?:#|$))', multiLine: true),
+        (Match m) => '${m[1]}$newVersion',
       );
 
       _pubspecFile.writeAsStringSync(updatedPubspecContents);
