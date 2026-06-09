@@ -63,5 +63,47 @@ environment:
       // Check formatting preservation (empty line)
       expect(updatedContent, contains('\nenvironment:'));
     });
+
+    test('does not modify version inside dependencies', () async {
+      final initialContent = '''
+name: my_package
+description: A description.
+
+dependencies:
+  some_dependency:
+    version: 1.0.0
+
+version: 1.0.0
+
+environment:
+  sdk: '>=2.12.0 <3.0.0'
+''';
+      await pubspecFile.writeAsString(initialContent);
+
+      final publish = DartPubPublish(
+          pubspecFile: pubspecFile.path,
+          changeLogFile: changeLogFile.path,
+          workingDir: tempDir.path,
+          git: false,
+          analyze: false,
+          format: false,
+          fix: false,
+          tests: false,
+          pubGet: false,
+          pubspec: true,
+          pubspec2dart: false,
+          pubPublish: false,
+          verbose: false);
+
+      await publish.run('2.0.0', message: 'Update version');
+
+      final updatedContent = pubspecFile.readAsStringSync();
+
+      // Check root version update
+      expect(updatedContent, contains('version: 2.0.0'));
+
+      // Check nested version preservation
+      expect(updatedContent, contains('    version: 1.0.0'));
+    });
   });
 }
