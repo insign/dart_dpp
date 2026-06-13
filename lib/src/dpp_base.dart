@@ -217,7 +217,7 @@ class DartPubPublish {
       log('Updating version in pubspec.yaml...');
 
       final updatedPubspecContents = oldPubspecContents.replaceFirstMapped(
-        RegExp(r'^(\s*version\s*:\s*)(.*?)(?=\s*(?:#.*)?$)', multiLine: true),
+        RegExp(r'^(version\s*:\s*)(.*?)(?=\s*(?:#.*)?$)', multiLine: true),
         (match) => '${match[1]}$newVersion',
       );
 
