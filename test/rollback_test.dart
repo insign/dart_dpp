@@ -22,6 +22,8 @@ name: test_pkg
 version: 1.0.0
 environment:
   sdk: ">=3.0.0 <4.0.0"
+dev_dependencies:
+  test: any
 ''');
 
       // 3. Create lib directory and pubspec.dart to verify it gets rolled back too
@@ -63,7 +65,8 @@ void main() {
 
       // Verify command failed because of the failing test
       expect(result.exitCode, isNot(0));
-      expect(result.stderr.toString(), contains('Command "dart test --exclude-tags dpp" failed'));
+      expect(result.stderr.toString(),
+          contains('Command "dart test --exclude-tags dpp" failed'));
 
       // Verify rollback occurred
 
@@ -76,12 +79,16 @@ void main() {
       expect(updatedPubspecDart, equals('// original pubspec.dart content\n'));
 
       // Check for rollback log output
-      expect(result.stdout.toString(), contains('Rolling back changes to pubspec.yaml...'));
+      expect(result.stdout.toString(),
+          contains('Rolling back changes to pubspec.yaml...'));
       expect(result.stdout.toString(), contains('Running last dart tests...'));
-      expect(result.stdout.toString(), contains('Tests failed during rollback')); // it logs on stdout with [ERROR] or stderr? Let's check stdout since log() prints.
+      expect(
+          result.stdout.toString(),
+          contains(
+              'Tests failed during rollback')); // it logs on stdout with [ERROR] or stderr? Let's check stdout since log() prints.
       // pubspec2dart was created before tests, so it should be rolled back!
-      expect(result.stdout.toString(), contains('Rolling back changes to pubspec2dart...'));
-
+      expect(result.stdout.toString(),
+          contains('Rolling back changes to pubspec2dart...'));
     } finally {
       // Cleanup
       tempDir.deleteSync(recursive: true);
@@ -104,6 +111,8 @@ name: test_pkg
 version: 1.0.0
 environment:
   sdk: ">=3.0.0 <4.0.0"
+dev_dependencies:
+  test: any
 ''');
 
       final libDir = Directory(p.join(tempDir.path, 'lib'))..createSync();
@@ -139,8 +148,8 @@ environment:
       expect(pubspecDartFile.existsSync(), isFalse);
 
       // Check for rollback log output
-      expect(result.stdout.toString(), contains('Rolling back changes to pubspec2dart...'));
-
+      expect(result.stdout.toString(),
+          contains('Rolling back changes to pubspec2dart...'));
     } finally {
       tempDir.deleteSync(recursive: true);
     }

@@ -167,10 +167,9 @@ class DartPubPublish {
     File pubspec2dartFile =
         File(path.join(_workingDir.path, 'lib', 'pubspec.dart'));
     bool pubspec2dartExisted = pubspec2dartFile.existsSync();
-    String? oldPubspec2dartContents =
-        _pubspec2dart && pubspec2dartExisted
-            ? pubspec2dartFile.readAsStringSync()
-            : null;
+    String? oldPubspec2dartContents = _pubspec2dart && pubspec2dartExisted
+        ? pubspec2dartFile.readAsStringSync()
+        : null;
     final yaml = loadYaml(oldPubspecContents);
     final oldVersion = Version.parse(yaml['version']);
     Version newVersion;
@@ -261,7 +260,8 @@ class DartPubPublish {
       }
       if (_tests) {
         log('Running dart tests...');
-        await runCommand('dart', ['test', '--exclude-tags', 'dpp']);
+        await runCommand('dart', ['test', '--exclude-tags', 'dpp'],
+            acceptExitCodes: [65, 79]);
       }
 
       if (_changelog) {
@@ -306,7 +306,8 @@ class DartPubPublish {
       if (_tests) {
         log('Running last dart tests...');
         try {
-          await runCommand('dart', ['test', '--tags', 'dpp']);
+          await runCommand('dart', ['test', '--tags', 'dpp'],
+              acceptExitCodes: [65, 79]);
         } on CommandFailedException catch (e) {
           log('Tests failed during rollback: ${e.toString()}', error: true);
         }
@@ -344,7 +345,8 @@ class DartPubPublish {
   ///
   /// If the process exits with a non-zero exit code, a message indicating the exit code is printed to the console and
   /// the program is terminated with that exit code.
-  Future<void> runCommand(String command, List<String> args) async {
+  Future<void> runCommand(String command, List<String> args,
+      {List<int> acceptExitCodes = const []}) async {
     final process =
         await Process.start(command, args, workingDirectory: _workingDir.path);
     await Future.wait([
@@ -352,7 +354,7 @@ class DartPubPublish {
       stderr.addStream(process.stderr),
     ]);
     final exitCode = await process.exitCode;
-    if (exitCode != 0) {
+    if (exitCode != 0 && !acceptExitCodes.contains(exitCode)) {
       throw CommandFailedException(command, args, exitCode);
     }
   }
